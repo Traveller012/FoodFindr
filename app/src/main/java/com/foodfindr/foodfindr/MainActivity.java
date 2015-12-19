@@ -43,10 +43,14 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
+                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                //      .setAction("Action", null).show();
 
                 //Launch capture bill activity
+                Intent myIntent = new Intent(MainActivity.this, UploadBill.class);
+                MainActivity.this.startActivity(myIntent);
+
+
 
             }
         });
@@ -144,7 +148,14 @@ public class MainActivity extends AppCompatActivity
             Intent myIntent = new Intent(MainActivity.this, FoodHistory.class);
             MainActivity.this.startActivity(myIntent);
 
-        } else if (id == R.id.sign_out) {
+        } else if (id == R.id.nearby_restaurants){
+
+            //MapsActivity
+            Intent myIntent = new Intent(MainActivity.this, MapsActivity.class);
+            MainActivity.this.startActivity(myIntent);
+
+        }
+        else if (id == R.id.sign_out) {
 
             userID = -1;
             username = "";
@@ -316,7 +327,6 @@ public class MainActivity extends AppCompatActivity
             holder.title.setText(item.title);
 
             //item.image = (ImageView) convertView.findViewById(R.id.favouriteFoodImageView);
-
 
             return convertView;
         }

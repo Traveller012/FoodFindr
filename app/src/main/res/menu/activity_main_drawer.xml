@@ -11,6 +11,12 @@
             android:icon="@drawable/ic_menu_gallery"
             android:title="My Food History" />
         <item
+            android:id="@+id/nearby_restaurants"
+            android:icon="@drawable/common_full_open_on_phone"
+            android:title="Nearby Restaurants" />
+
+
+        <item
             android:id="@+id/sign_out"
             android:icon="@drawable/ic_menu_manage"
             android:title="Sign out" />

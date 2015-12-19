@@ -109,4 +109,5 @@
         "when a user tries to pick up one of cards.\n\n"
     </string>
     <string name="title_activity_food_history">My Food History</string>
+    <string name="title_activity_maps">Map</string>
 </resources>

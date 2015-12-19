@@ -8,11 +8,32 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.foodfindr.foodfindr.UploadBill">
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/capturedBillImageView"
+        android:src="@drawable/ic_menu_manage"
+        android:layout_gravity="center_horizontal" />
 
-    <ListView
-        android:id="@+id/mylist_rate_food_items"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-    </ListView>
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <ListView
+            android:id="@+id/mylist_rate_food_items"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+        </ListView>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:id="@+id/button"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true" />
+
+    </LinearLayout>
 
 </RelativeLayout>
