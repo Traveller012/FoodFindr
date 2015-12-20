@@ -32,12 +32,83 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.facebook.FacebookSdk;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
+import android.app.Fragment;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AppCompatActivity;
+import android.app.LoaderManager.LoaderCallbacks;
+
+import android.content.CursorLoader;
+import android.content.Loader;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
+
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import com.facebook.GraphRequest;
+import com.facebook.GraphRequestAsyncTask;
+import com.facebook.GraphResponse;
+import com.facebook.appevents.AppEventsLogger;
+
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.util.AttributeSet;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.RemoteViews;
+import android.widget.Toast;
+
+import com.facebook.CallbackManager;
+import com.facebook.LoggingBehavior;
+import com.facebook.FacebookSdk.InitializeCallback.*;
+import com.facebook.AccessToken;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+import com.facebook.FacebookException;
+import com.facebook.FacebookCallback;
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+
+        CallbackManager callbackManager;
 
     /**
      * Id to identity READ_CONTACTS permission request.
@@ -65,7 +136,130 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        callbackManager = CallbackManager.Factory.create();
+//        try {
+//            PackageInfo info = getPackageManager().getPackageInfo(
+//                    "com.foodfindr.foodfindr",
+//                    PackageManager.GET_SIGNATURES);
+//            for (Signature signature : info.signatures) {
+//                MessageDigest md = MessageDigest.getInstance("SHA");
+//                md.update(signature.toByteArray());
+//                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+//            }
+//        } catch (PackageManager.NameNotFoundException e) {
+//
+//        } catch (NoSuchAlgorithmException e) {
+//
+//        }
+//ntehHEGWL0SH3KIlOZKI4e+jxcg=
         setContentView(R.layout.activity_login);
+
+
+
+        LoginButton loginButton = (LoginButton) findViewById(R.id.login_button);
+        List<String> perm= new ArrayList<String>();
+        /*perm.add("user_friends");
+        perm.add("email");
+        perm.add("public_profile");
+        //loginButton.setReadPermissions("user_friends");
+        loginButton.setReadPermissions(perm);*/
+        // If using in a fragment
+        //loginButton.setFragment(this);
+        // Other app specific specialization
+        Log.d("Callback", "Starts here");
+        // Callback registration
+
+
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                // App code
+                // System.out.println("Reached here ::: SUccess");
+                final Intent myIntent = new Intent(LoginActivity.this, MainActivity.class);
+                final AccessToken accessToken = loginResult.getAccessToken();
+
+                GraphRequest request = GraphRequest.newMeRequest(accessToken, new GraphRequest.GraphJSONObjectCallback() {
+
+
+                    @Override
+                    public void onCompleted(JSONObject user, GraphResponse graphResponse) {
+
+                        /*Log.d("JSON OBJECT", user.names().toString());
+                        Log.d("username", user.optString("name"));
+                        Log.d("userID", user.optString("id"));
+                        try {
+                            Log.d("email", user.getString("email") + "email");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        Log.d("User Keys", user.keys().toString());
+                    */
+
+                        try {
+                            Log.d("name", user.getString("name"));
+                            Log.d("email", user.getString("email"));
+                            Log.d("email",user.getString("id"));
+
+                            myIntent.putExtra("emailID", user.getString("email"));
+                            myIntent.putExtra("username", user.getString("name"));
+                            myIntent.putExtra("userID",  user.getLong("id"));
+                            LoginActivity.this.startActivity(myIntent);
+
+
+                        }
+                        catch(Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+
+
+                        Log.d("Reached ","here");
+
+                    }
+                });
+
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "id,name,email,link");
+                request.setParameters(parameters);
+
+                request.executeAsync();
+
+
+
+
+
+
+                /*Log.d("Hello", "World");
+                loginResult.getRecentlyGrantedPermissions();
+
+                myIntent.putExtra("userID",1); //Optional parameters
+                myIntent.putExtra("username", "user " + "aman"); //Optional parameters
+                myIntent.putExtra("emailID", "aman@fb.com"); //Optional parameters*/
+
+
+
+               // Toast.makeText(LoginActivity.this.getParent(), "This is my ", Toast.LENGTH_LONG).show();
+
+            }
+
+            @Override
+            public void onCancel() {
+                // App code
+                Log.d("Cancel","Cancel Message");
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+                // App code
+                Log.d("Not ", "Cool");
+
+            }
+        });
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -135,6 +329,29 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 populateAutoComplete();
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Logs 'install' and 'app activate' App Events.
+        AppEventsLogger.activateApp(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // Logs 'app deactivate' App Event.
+        AppEventsLogger.deactivateApp(this);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
 

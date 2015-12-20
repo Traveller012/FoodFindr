@@ -26,7 +26,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    int userID;
+    Long userID;
     String username;
     String emailID;
     private AnimatedExpandableListView listView;
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity
                 TextView usernameTextView = (TextView)findViewById(R.id.usernameTextView);
                 TextView emailTextView = (TextView)findViewById(R.id.emailTextView);
 
-                usernameTextView.setText("user" + userID);
+                usernameTextView.setText("user " + username);
                 emailTextView.setText(emailID);
 
             }
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity
         //set user profile in nav bar
         Intent intent = getIntent();
 
-        userID = intent.getIntExtra("userID",-1); //key, default value
+        userID = intent.getLongExtra("userID",-1L); //key, default value
         username = intent.getStringExtra("username"); //if it's a string you stored.
         emailID = intent.getStringExtra("emailID"); //if it's a string you stored.
 
@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity
         }
         else if (id == R.id.sign_out) {
 
-            userID = -1;
+            userID = -1L;
             username = "";
             emailID = "";
 

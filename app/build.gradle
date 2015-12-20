@@ -1,9 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'FoodFindr'
+            keyPassword 'stupid76'
+            storeFile file('/Users/chahar/foodfindr.jks')
+            storePassword 'stupid76'
+        }
+    }
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
-
     defaultConfig {
         applicationId "com.foodfindr.foodfindr"
         minSdkVersion 15
@@ -26,4 +33,5 @@ dependencies {
     compile 'com.android.support:design:23.1.1'
     compile 'com.google.android.gms:play-services:8.3.0'
     compile 'com.googlecode.json-simple:json-simple:1.1'
+    compile 'com.facebook.android:facebook-android-sdk:4.7.0'
 }

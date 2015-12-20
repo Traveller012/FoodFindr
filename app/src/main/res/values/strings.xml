@@ -110,4 +110,6 @@
     </string>
     <string name="title_activity_food_history">My Food History</string>
     <string name="title_activity_maps">Map</string>
+    <string name="facebook_app_id"> 196580157353439 </string>
+
 </resources>
