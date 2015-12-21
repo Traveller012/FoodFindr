@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -19,6 +20,9 @@ import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.facebook.AccessToken;
+import com.facebook.login.LoginManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +39,18 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        AccessToken token = AccessToken.getCurrentAccessToken();
+        if (token==null)
+        {
+            Log.d("Token", "null");
+            Intent myIntent = new Intent(MainActivity.this, LoginActivity.class);
+            MainActivity.this.startActivity(myIntent);
+        }
+
+
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -92,6 +108,7 @@ public class MainActivity extends AppCompatActivity
         userID = intent.getLongExtra("userID",-1L); //key, default value
         username = intent.getStringExtra("username"); //if it's a string you stored.
         emailID = intent.getStringExtra("emailID"); //if it's a string you stored.
+
 
 
         initializeListView();
@@ -160,7 +177,7 @@ public class MainActivity extends AppCompatActivity
             userID = -1L;
             username = "";
             emailID = "";
-
+            LoginManager.getInstance().logOut();
             Intent myIntent = new Intent(MainActivity.this, LoginActivity.class);
             MainActivity.this.startActivity(myIntent);
         }

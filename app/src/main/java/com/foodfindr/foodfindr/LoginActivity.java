@@ -138,6 +138,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onCreate(savedInstanceState);
 
 
+
         FacebookSdk.sdkInitialize(getApplicationContext());
         callbackManager = CallbackManager.Factory.create();
 //        try {
@@ -201,14 +202,33 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     */
 
                         try {
-                            Log.d("name", user.getString("name"));
-                            Log.d("email", user.getString("email"));
-                            Log.d("email",user.getString("id"));
+                            final String email = user.getString("email");
+                            final String username = user.getString("name");
+                            final Long id =  user.getLong("id");
 
-                            myIntent.putExtra("emailID", user.getString("email"));
-                            myIntent.putExtra("username", user.getString("name"));
-                            myIntent.putExtra("userID",  user.getLong("id"));
-                            LoginActivity.this.startActivity(myIntent);
+                            if (email!=null) {
+                                Log.d("email", user.getString("email"));
+                                myIntent.putExtra("emailID", email);
+                            }
+                            else
+                            {
+                                myIntent.putExtra("emailID", "No email permission");
+                            }
+
+                            if (username!=null) {
+                                Log.d("name", user.getString("name"));
+                                myIntent.putExtra("username", username);
+                            }
+
+                            if (id!=null) {
+                                Log.d("id", user.getString("id"));
+                                myIntent.putExtra("userID", id);
+                            }
+
+
+
+                            if (username!=null && id!=null )
+                                LoginActivity.this.startActivity(myIntent);
 
 
                         }
