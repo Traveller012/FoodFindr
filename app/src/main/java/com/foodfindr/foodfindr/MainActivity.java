@@ -37,9 +37,9 @@ public class MainActivity extends AppCompatActivity
     private AnimatedExpandableListView listView;
     private ExampleAdapter adapter;
 
-    private static final String TAG = "MainActivity";
-
     public static AmazonClientManager clientManager = null;
+
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

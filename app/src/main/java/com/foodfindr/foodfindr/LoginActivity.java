@@ -164,6 +164,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 //
 //        }
 //ntehHEGWL0SH3KIlOZKI4e+jxcg=
+
         setContentView(R.layout.activity_login);
 
 
@@ -253,7 +254,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 });
 
                 Bundle parameters = new Bundle();
-                parameters.putString("fields", "id,name,email,link");
+                parameters.putString("fields", "id,name,email,link,picture.type(large)");
                 request.setParameters(parameters);
 
                 request.executeAsync();
@@ -290,6 +291,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
         // Set up the login form.
+        /*
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
 
@@ -315,6 +317,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+        */
     }
 
     private void populateAutoComplete() {
