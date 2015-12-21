@@ -18,10 +18,14 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.ScanRequest;
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.foodfindr.foodfindr.MainActivity;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class DynamoDBManager {
 
@@ -64,6 +68,47 @@ public class DynamoDBManager {
         return null;
     }
 
+    public static ArrayList<String> getRestaurantDataFromRestaurantName(String scannedText) {
+
+        AmazonDynamoDBClient ddb = MainActivity.clientManager
+                .ddb();
+        DynamoDBMapper mapper = new DynamoDBMapper(ddb);
+
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
+
+        ScanRequest scanRequest = new ScanRequest()
+                .withTableName("Restaurant_Data")
+                .withProjectionExpression("Restaurant_Name");
+
+        ScanResult result = ddb.scan(scanRequest);
+        ArrayList<String> resultList = new ArrayList<String>();
+        for (Map<String, AttributeValue> item : result.getItems()){
+            Collection<AttributeValue> values = item.values();
+            for (AttributeValue value:values) {
+                if(scannedText.contains(value.getS())){//if scanned text has restaurant name
+                    resultList.add(value.getS());
+                }
+            }
+
+        }
+        return resultList;
+    }
+
+    private static ArrayList<String> getMenuItems(String restaurantName) {
+        AmazonDynamoDBClient ddb = MainActivity.clientManager
+                .ddb();
+        DynamoDBMapper mapper = new DynamoDBMapper(ddb);
+
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
+
+        ScanRequest scanRequest = new ScanRequest()
+                .withTableName("Restaurant_Data")
+                .withProjectionExpression("Restaurant_Name");
+
+        return new ArrayList<String>();
+
+    }
+
     private static Location getRestaurantLocation(String restaurantAddress,Context context) {
         Geocoder coder = new Geocoder(context);
         List<Address> address;
@@ -91,14 +136,28 @@ public class DynamoDBManager {
         try {
             mapper.save(billDetails);
         } catch (AmazonServiceException ex) {
-            Log.e(TAG, "Error inserting users");
+            Log.e(TAG, "Error inserting bill");
+            MainActivity.clientManager
+                    .wipeCredentialsOnAuthError(ex);
+        }
+    }
+
+    public static void insertUserData(User user) {
+        AmazonDynamoDBClient ddb = MainActivity.clientManager
+                .ddb();
+        DynamoDBMapper mapper = new DynamoDBMapper(ddb);
+
+        try {
+            mapper.save(user);
+        } catch (AmazonServiceException ex) {
+            Log.e(TAG, "Error inserting user");
             MainActivity.clientManager
                     .wipeCredentialsOnAuthError(ex);
         }
     }
 
 
-    public static List<UserRecommendation> getUserRecommendations(String userID) {
+    public static List<UserRecommendation> getUserRecommendations(Long userID) {
 
         AmazonDynamoDBClient ddb = MainActivity.clientManager
                 .ddb();
@@ -111,7 +170,7 @@ public class DynamoDBManager {
         scanExpression.addFilterCondition("User_ID",
                 new Condition()
                         .withComparisonOperator(ComparisonOperator.EQ)
-                        .withAttributeValueList(new AttributeValue().withS(userID)));
+                        .withAttributeValueList(new AttributeValue().withN(userID.toString())));
 
         try {
             final PaginatedScanList<UserRecommendation> userRecommendations = mapper.scan(UserRecommendation.class, scanExpression);
@@ -130,11 +189,13 @@ public class DynamoDBManager {
         AmazonDynamoDBClient ddb = MainActivity.clientManager
                 .ddb();
         DynamoDBMapper mapper = new DynamoDBMapper(ddb);
-        List<RestaurantData> finalRestaurantDataList = new ArrayList<RestaurantData>();
+        List<RestaurantData> finalRestaurantDataList = new ArrayList<RestaurantData>(); //all restaurant details nearby
 
         List<RestaurantData> restaurantDataList = getRestaurantData(foodItems);
         for (RestaurantData restaurantData:restaurantDataList) {
-            final String restaurantAddress = restaurantData.getRestaurantAddress();
+
+            final String restaurantAddress = restaurantData.getRestaurantAddress();//for each rest address
+
             Location target = getRestaurantLocation(restaurantAddress,context);
             if(location.distanceTo(target) < 5000) {
                 finalRestaurantDataList.add(restaurantData);

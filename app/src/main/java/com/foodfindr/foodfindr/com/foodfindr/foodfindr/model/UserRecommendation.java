@@ -12,16 +12,16 @@ import java.util.List;
 @DynamoDBTable(tableName="User_Recommendation")
 public class UserRecommendation {
 
-    private String userID;
+    private Long userID;
 
     private List<String> recommendations;
 
-    public String getUserID() {
+    public Long getUserID() {
         return userID;
     }
 
     @DynamoDBAttribute(attributeName = "User_ID")
-    public void setUserID(String userID) {
+    public void setUserID(Long userID) {
         this.userID = userID;
     }
 

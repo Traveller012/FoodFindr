@@ -17,7 +17,11 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 import java.io.File;
+import java.util.ArrayList;
 
 public class UploadBill extends AppCompatActivity {
 
@@ -25,22 +29,6 @@ public class UploadBill extends AppCompatActivity {
     String[] itemname ={
             "Dosa",
             "Pizza",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
-            "Idli",
             "Idli"
     };
     private static final int TAKE_PICTURE = 1;
@@ -61,21 +49,7 @@ public class UploadBill extends AppCompatActivity {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        RateFoodListAdapter adapter=new RateFoodListAdapter(this, itemname);
-        list=(ListView)findViewById(R.id.mylist_rate_food_items);
-        list.setAdapter(adapter);
 
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                // TODO Auto-generated method stub
-                String Selecteditem = itemname[+position];
-                //Toast.makeText(getApplicationContext(), Selecteditem, Toast.LENGTH_SHORT).show();
-
-            }
-        });
 
     }
 
@@ -100,13 +74,35 @@ public class UploadBill extends AppCompatActivity {
                         Toast.makeText(this, selectedImage.toString(),
                                 Toast.LENGTH_LONG).show();
 
-                        ScanReceipts.getJSONDataFromImage(bitmap);
+                        ArrayList<String> JSONMatchedMenuItems = ScanReceipts.getJSONDataFromImage(bitmap);
+                        itemname = JSONMatchedMenuItems.toArray(new String[JSONMatchedMenuItems.size()]);
+
+                        RateFoodListAdapter adapter=new RateFoodListAdapter(this, itemname);
+                        list=(ListView)findViewById(R.id.mylist_rate_food_items);
+                        list.setAdapter(adapter);
+
+                        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view,
+                                                    int position, long id) {
+                                // TODO Auto-generated method stub
+                                String Selecteditem = itemname[+position];
+                                //Toast.makeText(getApplicationContext(), Selecteditem, Toast.LENGTH_SHORT).show();
+
+                            }
+                        });
+
 
                     } catch (Exception e) {
                         Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT)
                                 .show();
                         Log.e("Camera", e.toString());
                     }
+                }
+                else
+                {   //if image not taken
+                    finish();
                 }
         }
     }

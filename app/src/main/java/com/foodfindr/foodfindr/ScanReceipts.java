@@ -7,6 +7,8 @@ import android.graphics.Bitmap;
 import android.util.Base64;
 import android.util.Log;
 
+import com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.RestaurantData;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,12 +26,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import static com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.DynamoDBManager.getRestaurantDataFromRestaurantName;
+
 public class ScanReceipts {
 
     /**
      * @param args
      */
-    public static void getJSONDataFromImage(Bitmap image)
+    public static ArrayList<String> getJSONDataFromImage(Bitmap image)
     {
         String license_code = "7E5C0FAB-2F70-48C3-BC07-29756AF14DFA";
         String user_name =  "KUSHWANTH";
@@ -37,7 +41,7 @@ public class ScanReceipts {
         //Supporting only English Language Receipts
         String ocrURL = "http://www.ocrwebservice.com/restservices/processDocument?gettext=true";
         String filePath = "C:\\Users\\ASHASHANTHARAM\\Desktop\\IMAG0681.jpg";
-
+        ArrayList<String> matchedItems = new ArrayList<>();
         try
         {
 
@@ -74,8 +78,9 @@ public class ScanReceipts {
                 String receiptData = PrintOCRResponse(jsonResponse);
                 System.out.println("The receipt data obtained is ");
                 Log.d("d", receiptData);
-                String jsonFood = NamedEntityExtractor.extractFoodData(receiptData);
-                Log.d("d", "Food items converted into json string is " + jsonFood);
+                matchedItems = NamedEntityExtractor.extractFoodData(receiptData);
+
+                return matchedItems;
             }
             else if (httpCode == HttpURLConnection.HTTP_UNAUTHORIZED)
             {
@@ -100,6 +105,7 @@ public class ScanReceipts {
         {
             e1.printStackTrace();
         }
+        return matchedItems;
     }
 
     private static String GetResponseToString(InputStream inputStream) throws IOException
@@ -145,24 +151,50 @@ public class ScanReceipts {
 
 class NamedEntityExtractor
 {
-    public static String extractFoodData(String receiptData)
+    public static ArrayList<String> extractFoodData(String receiptData)
     {
         String jsonFoodString=null;
         String[] foodArray = {"cranberries","elmhurst", "mens", "suits", "Macy's", "Total"};
         JSONObject foodObject = new JSONObject();
         receiptData = receiptData.toLowerCase();
         int j=1;
-        for(int i=0;i<foodArray.length;i++)
-        {
-            if(receiptData.contains(foodArray[i]))
-            {
-                Integer key = new Integer(j);
-                foodObject.put(key, foodArray[i]);
-                j++;
-            }
-        }
+        ArrayList<String> foodItemsMatched = new ArrayList<>();
 
-        jsonFoodString = foodObject.toJSONString();
-        return jsonFoodString;
+        //get restaurant name matches
+        ArrayList<String> matchedRestaurants = getRestaurantDataFromRestaurantName(receiptData);
+
+        //for each restaurant name
+        for (String matchedRestaurant : matchedRestaurants) {
+            //find matching food items
+
+            List<String> menuItems = getMenuItems(matchedRestaurant);
+
+            for (String menuItem : menuItems) {
+
+                if(receiptData.contains(menuItem))
+                {
+                    Integer key = new Integer(j);
+                    foodItemsMatched.add(menuItem);
+                    foodObject.put(key, menuItem);
+                    j++;
+                }
+            }
+
+        }
+//
+//        //get food item matches
+//        for(int i=0;i<foodArray.length;i++)
+//        {
+//            if(receiptData.contains(foodArray[i]))
+//            {
+//                Integer key = new Integer(j);
+//                foodObject.put(key, foodArray[i]);
+//                j++;
+//            }
+//        }
+
+        return foodItemsMatched;
+        //jsonFoodString = foodObject.toJSONString();
+        //return jsonFoodString;
     }
 }
