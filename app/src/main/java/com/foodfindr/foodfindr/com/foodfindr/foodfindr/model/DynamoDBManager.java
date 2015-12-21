@@ -94,7 +94,7 @@ public class DynamoDBManager {
         return resultList;
     }
 
-    private static ArrayList<String> getMenuItems(String restaurantName) {
+    public static ArrayList<String> getMenuItems(String restaurantName) {
         AmazonDynamoDBClient ddb = MainActivity.clientManager
                 .ddb();
         DynamoDBMapper mapper = new DynamoDBMapper(ddb);
@@ -109,7 +109,7 @@ public class DynamoDBManager {
 
     }
 
-    private static Location getRestaurantLocation(String restaurantAddress,Context context) {
+    public static Location getRestaurantLocation(String restaurantAddress,Context context) {
         Geocoder coder = new Geocoder(context);
         List<Address> address;
         try {

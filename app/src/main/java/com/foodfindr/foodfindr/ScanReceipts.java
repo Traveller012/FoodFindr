@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.util.Base64;
 import android.util.Log;
 
+import com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.DynamoDBManager;
 import com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.RestaurantData;
 
 import java.io.BufferedReader;
@@ -26,6 +27,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import static com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.DynamoDBManager.getMenuItems;
 import static com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.DynamoDBManager.getRestaurantDataFromRestaurantName;
 
 public class ScanReceipts {
@@ -40,7 +42,7 @@ public class ScanReceipts {
 
         //Supporting only English Language Receipts
         String ocrURL = "http://www.ocrwebservice.com/restservices/processDocument?gettext=true";
-        String filePath = "C:\\Users\\ASHASHANTHARAM\\Desktop\\IMAG0681.jpg";
+
         ArrayList<String> matchedItems = new ArrayList<>();
         try
         {
