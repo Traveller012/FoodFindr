@@ -3,6 +3,7 @@ package com.foodfindr.foodfindr;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -36,6 +37,10 @@ public class MainActivity extends AppCompatActivity
     private AnimatedExpandableListView listView;
     private ExampleAdapter adapter;
 
+    public static AmazonClientManager clientManager = null;
+
+    private static final String TAG = "MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,8 +57,25 @@ public class MainActivity extends AppCompatActivity
 
 
         setContentView(R.layout.activity_main);
+
+        if (android.os.Build.VERSION.SDK_INT > 9) {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+        }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        clientManager = new AmazonClientManager(this);
+        /*final ArrayList<DynamoDBManager.Tweet> tweetList = DynamoDBManager.getTweetList();
+        int i = 0;
+        for(DynamoDBManager.Tweet tweet : tweetList){
+            if(i <= 10){
+                Log.d(TAG, tweet.getTweetUser());
+            }else {
+                break;
+            }
+            i++;
+        }*/
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
