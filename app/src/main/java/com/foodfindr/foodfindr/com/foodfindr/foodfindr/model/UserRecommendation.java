@@ -16,11 +16,11 @@ public class UserRecommendation {
 
     private List<String> recommendations;
 
+    @DynamoDBHashKey(attributeName = "User_ID")
     public Long getUserID() {
         return userID;
     }
 
-    @DynamoDBAttribute(attributeName = "User_ID")
     public void setUserID(Long userID) {
         this.userID = userID;
     }

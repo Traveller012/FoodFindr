@@ -6,10 +6,10 @@
             android:id="@+id/nav_camera"
             android:icon="@drawable/ic_menu_camera"
             android:title="Capture Bill" />
-        <item
-            android:id="@+id/food_history"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="My Food History" />
+        <!--<item-->
+            <!--android:id="@+id/food_history"-->
+            <!--android:icon="@drawable/ic_menu_gallery"-->
+            <!--android:title="My Food History" />-->
         <item
             android:id="@+id/nearby_restaurants"
             android:icon="@drawable/common_full_open_on_phone"

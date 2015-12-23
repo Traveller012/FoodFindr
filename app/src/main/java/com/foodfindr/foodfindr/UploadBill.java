@@ -13,15 +13,20 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.BillDetails;
+import com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.DynamoDBManager;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class UploadBill extends AppCompatActivity {
 
@@ -31,6 +36,9 @@ public class UploadBill extends AppCompatActivity {
             "Pizza",
             "Idli"
     };
+    public static ArrayList<String> JSONMatchedMenuItems = new ArrayList<String>();
+    public static ArrayList<Integer> sentiment = new ArrayList<Integer>();
+    public static BillDetails billDetails;
     private static final int TAKE_PICTURE = 1;
     private Uri imageUri;
 
@@ -39,6 +47,8 @@ public class UploadBill extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload_bill);
 
+        sentiment.clear();
+        JSONMatchedMenuItems.clear();
         Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
         File photo = new File(Environment.getExternalStorageDirectory(),  "Pic.jpg");
         intent.putExtra(MediaStore.EXTRA_OUTPUT,
@@ -74,7 +84,10 @@ public class UploadBill extends AppCompatActivity {
                         Toast.makeText(this, selectedImage.toString(),
                                 Toast.LENGTH_LONG).show();
 
-                        ArrayList<String> JSONMatchedMenuItems = ScanReceipts.getJSONDataFromImage(bitmap);
+                        UploadBill.JSONMatchedMenuItems = ScanReceipts.getJSONDataFromImage(bitmap);
+
+
+
                         itemname = JSONMatchedMenuItems.toArray(new String[JSONMatchedMenuItems.size()]);
 
                         RateFoodListAdapter adapter=new RateFoodListAdapter(this, itemname);
@@ -90,8 +103,31 @@ public class UploadBill extends AppCompatActivity {
                                 String Selecteditem = itemname[+position];
                                 //Toast.makeText(getApplicationContext(), Selecteditem, Toast.LENGTH_SHORT).show();
 
+
                             }
                         });
+
+
+                        Button b=(Button)findViewById(R.id.saveRatingsButton);
+
+                        b.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                                billDetails = new BillDetails();
+//                                billDetails.setID(new Date().getTime()+"");
+                                billDetails.setUserID(MainActivity.userID);
+                                billDetails.setFoodItem(UploadBill.JSONMatchedMenuItems);
+                                billDetails.setFoodSentiment(UploadBill.sentiment);
+                                billDetails.setBillID("" + new Date() + MainActivity.userID);
+                                Log.d("UploadBill",billDetails.toString());
+                                DynamoDBManager.insertBillData(billDetails);
+                                finish();
+
+                            }
+                        });
+
+
 
 
                     } catch (Exception e) {

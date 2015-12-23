@@ -6,11 +6,12 @@ import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBHashKey;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBTable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 
 @DynamoDBTable(tableName="Restaurant_Data")
-public class RestaurantData {
+public class RestaurantData implements Comparable<RestaurantData>{
 
 	private String ID;
 	
@@ -70,7 +71,10 @@ public class RestaurantData {
 	public void setMenuItems(List<String> menuItems) {
 		this.menuItems = menuItems;
 	}
-	
-	
 
+
+	@Override
+	public int compareTo(RestaurantData another) {
+		return this.restaurantName.compareTo(another.restaurantName);
+	}
 }

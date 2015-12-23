@@ -2,6 +2,10 @@ package com.foodfindr.foodfindr;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.design.widget.FloatingActionButton;
@@ -24,14 +28,36 @@ import android.widget.TextView;
 
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
+import com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.DynamoDBManager;
+import com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.RestaurantData;
+import com.foodfindr.foodfindr.com.foodfindr.foodfindr.model.UserRecommendation;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Collections.*;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    Long userID;
+    public static Long userID;
     String username;
     String emailID;
     private AnimatedExpandableListView listView;
@@ -40,6 +66,12 @@ public class MainActivity extends AppCompatActivity
     public static AmazonClientManager clientManager = null;
 
     private static final String TAG = "MainActivity";
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,18 +79,16 @@ public class MainActivity extends AppCompatActivity
 
 
         AccessToken token = AccessToken.getCurrentAccessToken();
-        if (token==null)
-        {
+        if (token == null) {
             Log.d("Token", "null");
             Intent myIntent = new Intent(MainActivity.this, LoginActivity.class);
             MainActivity.this.startActivity(myIntent);
         }
 
 
-
         setContentView(R.layout.activity_main);
 
-        if (android.os.Build.VERSION.SDK_INT > 9) {
+        if (Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
         }
@@ -66,16 +96,7 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         clientManager = new AmazonClientManager(this);
-        /*final ArrayList<DynamoDBManager.Tweet> tweetList = DynamoDBManager.getTweetList();
-        int i = 0;
-        for(DynamoDBManager.Tweet tweet : tweetList){
-            if(i <= 10){
-                Log.d(TAG, tweet.getTweetUser());
-            }else {
-                break;
-            }
-            i++;
-        }*/
+        loadData();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -89,7 +110,6 @@ public class MainActivity extends AppCompatActivity
                 MainActivity.this.startActivity(myIntent);
 
 
-
             }
         });
 
@@ -97,19 +117,23 @@ public class MainActivity extends AppCompatActivity
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
 
-            /** Called when a drawer has settled in a completely closed state. */
+            /**
+             * Called when a drawer has settled in a completely closed state.
+             */
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
                 // Do whatever you want here
             }
 
-            /** Called when a drawer has settled in a completely open state. */
+            /**
+             * Called when a drawer has settled in a completely open state.
+             */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
 
 
-                TextView usernameTextView = (TextView)findViewById(R.id.usernameTextView);
-                TextView emailTextView = (TextView)findViewById(R.id.emailTextView);
+                TextView usernameTextView = (TextView) findViewById(R.id.usernameTextView);
+                TextView emailTextView = (TextView) findViewById(R.id.emailTextView);
 
                 usernameTextView.setText("user " + username);
                 emailTextView.setText(emailID);
@@ -127,13 +151,17 @@ public class MainActivity extends AppCompatActivity
         //set user profile in nav bar
         Intent intent = getIntent();
 
-        userID = intent.getLongExtra("userID",-1L); //key, default value
+        userID = intent.getLongExtra("userID", -1L); //key, default value
         username = intent.getStringExtra("username"); //if it's a string you stored.
         emailID = intent.getStringExtra("emailID"); //if it's a string you stored.
 
 
-
         initializeListView();
+
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
 
@@ -182,19 +210,18 @@ public class MainActivity extends AppCompatActivity
             Intent myIntent = new Intent(MainActivity.this, UploadBill.class);
             MainActivity.this.startActivity(myIntent);
 
-        } else if (id == R.id.food_history) {
+        }/* else if (id == R.id.food_history) {
 
             Intent myIntent = new Intent(MainActivity.this, FoodHistory.class);
             MainActivity.this.startActivity(myIntent);
 
-        } else if (id == R.id.nearby_restaurants){
+        }*/ else if (id == R.id.nearby_restaurants) {
 
             //MapsActivity
             Intent myIntent = new Intent(MainActivity.this, MapsActivity.class);
             MainActivity.this.startActivity(myIntent);
 
-        }
-        else if (id == R.id.sign_out) {
+        } else if (id == R.id.sign_out) {
 
             userID = -1L;
             username = "";
@@ -209,23 +236,48 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-    private void initializeListView(){
+    private void initializeListView() {
 
 
         List<GroupItem> items = new ArrayList<GroupItem>();
 
+        final UserRecommendation userRecommendation = DynamoDBManager.getUserRecommendations(userID);
+        final List<String> recommendations = userRecommendation.getRecommendations();
+
+        Map<String,Set<String>> restaurantMap = new HashMap<String, Set<String>>();
+        List<RestaurantData> restaurantNearby = DynamoDBManager.getRestaurantNearby(recommendations, getBestLocation(), this);
+        for (RestaurantData restaurant : restaurantNearby) {
+            for (String menuItem: restaurant.getMenuItems()) {
+                for (String recommendation :recommendations) {
+                    if(menuItem.toUpperCase().contains(recommendation.toUpperCase())){
+                        if(restaurantMap.get(recommendation) != null){
+                            restaurantMap.get(recommendation).add(restaurant.getRestaurantName());
+                        }else{
+                            Set<String> list = new HashSet<String>();
+                            list.add(restaurant.getRestaurantName());
+                            restaurantMap.put(recommendation, list);
+                        }
+                    }
+                }
+            }
+        }
+
         // Populate our list with groups and it's children
-        for(int i = 1; i < 5; i++) {
+        for (int i = 0; i < recommendations.size(); i++) {
+            Set<String> restaurantName = restaurantMap.get(recommendations.get(i));
+            if(restaurantName == null){
+                continue;
+            }
             GroupItem item = new GroupItem();
 
-            item.title = "Food " + i;
+            item.title = recommendations.get(i);
             //item.image.setImageResource(R.drawable.ic_menu_send);
+            final List<String> restaurants = new ArrayList<String>(restaurantName);
 
-            for(int j = 0; j < i; j++) {
+            for (int j = 0; j < restaurants.size(); j++) {
                 ChildItem child = new ChildItem();
-                child.title = "Restaurant " + j;
-                child.hint = "Too awesome";
+                child.title = restaurants.get(j);
+//                child.hint = "Too awesome";
 
                 item.items.add(child);
             }
@@ -260,6 +312,47 @@ public class MainActivity extends AppCompatActivity
 
 
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://com.foodfindr.foodfindr/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://com.foodfindr.foodfindr/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
+        client.disconnect();
+    }
+
     private static class GroupItem {
         String title;
         List<ChildItem> items = new ArrayList<ChildItem>();
@@ -382,7 +475,114 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    private void loadData() {
+        try {
+            InputStream inputStream = getResources().getAssets().open("Uptown.xls");
+            HSSFWorkbook workbook = new HSSFWorkbook(inputStream);
+            HSSFSheet sheet = workbook.getSheetAt(0);
+
+            Iterator<Row> rowIterator = sheet.iterator();
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                Iterator<Cell> cellIterator = row.cellIterator();
+
+                String restaurant = cellIterator.next().getStringCellValue();
+                String address = cellIterator.next().getStringCellValue();
+                String PhoneNumber = cellIterator.next().getStringCellValue();
 
 
+                RestaurantData restaurantData = new RestaurantData();
+                restaurantData.setRestaurantName(restaurant.toUpperCase());
+                if (PhoneNumber != null) {
+                    restaurantData.setRestaurantPhoneNumber(PhoneNumber.trim());
+                }
+                restaurantData.setRestaurantAddress(address.toUpperCase());
+
+                while (cellIterator.hasNext()) {
+                    Cell cell = cellIterator.next();
+                    String key = cell.getStringCellValue();
+                    if (key != null) {
+                        restaurantData.getMenuItems().add(key.toUpperCase());
+                    }
+                }
+                Restaurant.restaurantDataList.add(restaurantData);
+            }
+            sort(Restaurant.restaurantDataList);
+            workbook.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * try to get the 'best' location selected from all providers
+     */
+    private Location getBestLocation() {
+        Location gpslocation = getLocationByProvider(LocationManager.GPS_PROVIDER);
+        Location networkLocation =
+                getLocationByProvider(LocationManager.NETWORK_PROVIDER);
+        // if we have only one location available, the choice is easy
+        if (gpslocation == null) {
+            Log.d("TAG", "No GPS Location available.");
+            return networkLocation;
+        }
+        if (networkLocation == null) {
+            Log.d("TAG", "No Network Location available");
+            return gpslocation;
+        }
+        // a locationupdate is considered 'old' if its older than the configured
+        // update interval. this means, we didn't get a
+        // update from this provider since the last check
+        long old = System.currentTimeMillis() - getGPSCheckMilliSecsFromPrefs();
+        boolean gpsIsOld = (gpslocation.getTime() < old);
+        boolean networkIsOld = (networkLocation.getTime() < old);
+        // gps is current and available, gps is better than network
+        if (!gpsIsOld) {
+            Log.d("TAG", "Returning current GPS Location");
+            return gpslocation;
+        }
+        // gps is old, we can't trust it. use network location
+        if (!networkIsOld) {
+            Log.d("TAG", "GPS is old, Network is current, returning network");
+            return networkLocation;
+        }
+        // both are old return the newer of those two
+        if (gpslocation.getTime() > networkLocation.getTime()) {
+            Log.d("TAG", "Both are old, returning gps(newer)");
+            return gpslocation;
+        } else {
+            Log.d("TAG", "Both are old, returning network(newer)");
+            return networkLocation;
+        }
+    }
+
+    /**
+     * get the last known location from a specific provider (network/gps)
+     */
+    private Location getLocationByProvider(String provider) throws SecurityException {
+        Location location = null;
+//        if (!isProviderSupported(provider)) {
+//            return null;
+//        }
+        LocationManager locationManager = (LocationManager) getApplicationContext()
+                .getSystemService(Context.LOCATION_SERVICE);
+        try {
+            if (locationManager.isProviderEnabled(provider)) {
+                location = locationManager.getLastKnownLocation(provider);
+            }
+        } catch (IllegalArgumentException e) {
+            Log.d("TAG", "Cannot acces Provider " + provider);
+        }
+        return location;
+    }
+
+    private long getGPSCheckMilliSecsFromPrefs(){
+        return 10;
+    }
+
+    private long getMinDistanceFromPrefs(){
+        return 10;
+    }
 
 }

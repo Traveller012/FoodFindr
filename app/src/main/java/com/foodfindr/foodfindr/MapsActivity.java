@@ -93,7 +93,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return 10;
     }
 
-
     /**
      * try to get the 'best' location selected from all providers
      */

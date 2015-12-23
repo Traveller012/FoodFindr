@@ -37,8 +37,8 @@ public class ScanReceipts {
      */
     public static ArrayList<String> getJSONDataFromImage(Bitmap image)
     {
-        String license_code = "7E5C0FAB-2F70-48C3-BC07-29756AF14DFA";
-        String user_name =  "KUSHWANTH";
+        String license_code = "47AC75ED-0894-464F-87DB-AE062A234CBB";
+        String user_name =  "niteshch";
 
         //Supporting only English Language Receipts
         String ocrURL = "http://www.ocrwebservice.com/restservices/processDocument?gettext=true";
@@ -163,21 +163,22 @@ class NamedEntityExtractor
         ArrayList<String> foodItemsMatched = new ArrayList<>();
 
         //get restaurant name matches
-        ArrayList<String> matchedRestaurants = getRestaurantDataFromRestaurantName(receiptData);
+        ArrayList<RestaurantData> matchedRestaurants = getRestaurantDataFromRestaurantName(receiptData);
 
         //for each restaurant name
-        for (String matchedRestaurant : matchedRestaurants) {
+        for (RestaurantData matchedRestaurant : matchedRestaurants) {
             //find matching food items
 
-            List<String> menuItems = getMenuItems(matchedRestaurant);
+//            List<String> menuItems = getMenuItems(matchedRestaurant);
+            List<String> menuItems = matchedRestaurant.getMenuItems();
 
             for (String menuItem : menuItems) {
 
-                if(receiptData.contains(menuItem))
+                if(receiptData.toUpperCase().contains(menuItem.toUpperCase()))
                 {
                     Integer key = new Integer(j);
                     foodItemsMatched.add(menuItem);
-                    foodObject.put(key, menuItem);
+                    foodObject.put(menuItem, menuItem);
                     j++;
                 }
             }
@@ -194,8 +195,10 @@ class NamedEntityExtractor
 //                j++;
 //            }
 //        }
+        ArrayList<String> returnList = new ArrayList<String>(foodObject.values());
+        return returnList;
 
-        return foodItemsMatched;
+//        return foodItemsMatched;
         //jsonFoodString = foodObject.toJSONString();
         //return jsonFoodString;
     }

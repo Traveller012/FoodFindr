@@ -211,7 +211,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     */
 
                         try {
-                            final String email = user.getString("email");
+                            String email = null;
+                            if(user.has("email")){
+                                email = user.getString("email");
+                            }
                             final String username = user.getString("name");
                             final Long id =  user.getLong("id");
 

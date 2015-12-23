@@ -21,11 +21,14 @@ import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.foodfindr.foodfindr.MainActivity;
+import com.foodfindr.foodfindr.Restaurant;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class DynamoDBManager {
 
@@ -47,8 +50,8 @@ public class DynamoDBManager {
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
         scanExpression.addFilterCondition("Menu_Items",
                 new Condition()
-                        .withComparisonOperator(ComparisonOperator.CONTAINS)
-                        .withAttributeValueList(new AttributeValue().withL(attributeValues)));
+                        .withComparisonOperator(ComparisonOperator.IN)
+                        .withAttributeValueList(attributeValues));
         try {
             PaginatedScanList<RestaurantData> result = mapper.scan(
                     RestaurantData.class, scanExpression);
@@ -68,29 +71,18 @@ public class DynamoDBManager {
         return null;
     }
 
-    public static ArrayList<String> getRestaurantDataFromRestaurantName(String scannedText) {
+    public static ArrayList<RestaurantData> getRestaurantDataFromRestaurantName(String scannedText) {
 
-        AmazonDynamoDBClient ddb = MainActivity.clientManager
-                .ddb();
-        DynamoDBMapper mapper = new DynamoDBMapper(ddb);
-
-        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("Restaurant_Data")
-                .withProjectionExpression("Restaurant_Name");
-
-        ScanResult result = ddb.scan(scanRequest);
-        ArrayList<String> resultList = new ArrayList<String>();
-        for (Map<String, AttributeValue> item : result.getItems()){
-            Collection<AttributeValue> values = item.values();
-            for (AttributeValue value:values) {
-                if(scannedText.contains(value.getS())){//if scanned text has restaurant name
-                    resultList.add(value.getS());
-                }
+        ArrayList<RestaurantData> resultList = new ArrayList<RestaurantData>();
+        for (RestaurantData restaurantData: Restaurant.restaurantDataList){
+            final String restaurantName = restaurantData.getRestaurantName().toUpperCase();
+            Log.d(TAG,restaurantName);
+            if(scannedText.toUpperCase().contains(restaurantName)){//if scanned text has restaurant name
+                resultList.add(restaurantData);
+                break;
             }
-
         }
+
         return resultList;
     }
 
@@ -114,7 +106,7 @@ public class DynamoDBManager {
         List<Address> address;
         try {
             address = coder.getFromLocationName(restaurantAddress, 5);
-            if (address == null) {
+            if (address == null || address.isEmpty()) {
                 return null;
             }
             Address addressLocation = address.get(0);
@@ -136,7 +128,7 @@ public class DynamoDBManager {
         try {
             mapper.save(billDetails);
         } catch (AmazonServiceException ex) {
-            Log.e(TAG, "Error inserting bill");
+            Log.e(TAG, "Error inserting bill",ex);
             MainActivity.clientManager
                     .wipeCredentialsOnAuthError(ex);
         }
@@ -157,7 +149,7 @@ public class DynamoDBManager {
     }
 
 
-    public static List<UserRecommendation> getUserRecommendations(Long userID) {
+    public static UserRecommendation getUserRecommendations(Long userID) {
 
         AmazonDynamoDBClient ddb = MainActivity.clientManager
                 .ddb();
@@ -167,10 +159,10 @@ public class DynamoDBManager {
 
 
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-        scanExpression.addFilterCondition("User_ID",
+        /*scanExpression.addFilterCondition("User_ID",
                 new Condition()
                         .withComparisonOperator(ComparisonOperator.EQ)
-                        .withAttributeValueList(new AttributeValue().withN(userID.toString())));
+                        .withAttributeValueList(new AttributeValue().withN(userID.toString())));*/
 
         try {
             final PaginatedScanList<UserRecommendation> userRecommendations = mapper.scan(UserRecommendation.class, scanExpression);
@@ -182,7 +174,7 @@ public class DynamoDBManager {
             MainActivity.clientManager
                     .wipeCredentialsOnAuthError(ex);
         }
-        return resultList;
+        return resultList.get(0);
     }
 
     public static List<RestaurantData> getRestaurantNearby(List<String> foodItems, Location location, Context context) {
@@ -191,17 +183,34 @@ public class DynamoDBManager {
         DynamoDBMapper mapper = new DynamoDBMapper(ddb);
         List<RestaurantData> finalRestaurantDataList = new ArrayList<RestaurantData>(); //all restaurant details nearby
 
-        List<RestaurantData> restaurantDataList = getRestaurantData(foodItems);
+//        List<RestaurantData> restaurantDataList = getRestaurantData(foodItems);
+        List<RestaurantData> restaurantDataList = getRestaurantDataNew(foodItems);
         for (RestaurantData restaurantData:restaurantDataList) {
 
             final String restaurantAddress = restaurantData.getRestaurantAddress();//for each rest address
 
-            Location target = getRestaurantLocation(restaurantAddress,context);
-            if(location.distanceTo(target) < 5000) {
-                finalRestaurantDataList.add(restaurantData);
-            }
+//            Location target = getRestaurantLocation(restaurantAddress, context);
+
+//            if(location.distanceTo(target) < 5000) {
+            finalRestaurantDataList.add(restaurantData);
+//            }
         }
         return finalRestaurantDataList;
+    }
+
+    private static List<RestaurantData> getRestaurantDataNew(List<String> foodItems) {
+
+        ArrayList<RestaurantData> resultList = new ArrayList<RestaurantData>();
+        for (RestaurantData  restaurant : Restaurant.restaurantDataList) {
+            for (String food: foodItems) {
+                if(restaurant.getMenuItems().toString().toUpperCase().contains(food.toUpperCase())){
+                    resultList.add(restaurant);
+                    break;
+                }
+            }
+        }
+
+        return resultList;
     }
 
 

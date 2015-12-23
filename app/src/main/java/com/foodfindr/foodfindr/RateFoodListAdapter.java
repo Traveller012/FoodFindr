@@ -25,7 +25,7 @@ public class RateFoodListAdapter extends ArrayAdapter<String> {
         this.itemname=itemname;
     }
 
-    public View getView(int position,View view,ViewGroup parent) {
+    public View getView(final int position,View view,ViewGroup parent) {
         LayoutInflater inflater=context.getLayoutInflater();
         View rowView=inflater.inflate(R.layout.mylist_rate_food_items, null, true);
 
@@ -47,6 +47,7 @@ public class RateFoodListAdapter extends ArrayAdapter<String> {
                 //v.getId() will give you the image id
                 sadImageTextView.setColorFilter(Color.RED);
                 happyImageTextView.clearColorFilter();
+                UploadBill.sentiment.add(position,-1);
 
             }
         });
@@ -58,6 +59,7 @@ public class RateFoodListAdapter extends ArrayAdapter<String> {
                 //v.getId() will give you the image id
                 happyImageTextView.setColorFilter(Color.GREEN);
                 sadImageTextView.clearColorFilter();
+                UploadBill.sentiment.add(position, 1);
 
             }
         });

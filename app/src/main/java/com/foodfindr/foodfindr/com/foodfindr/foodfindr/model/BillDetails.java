@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by nites on 12/19/2015.
  */
-@DynamoDBTable(tableName="User_Recommendation")
+@DynamoDBTable(tableName="Bill_Details")
 public class BillDetails {
     private String ID;
 
@@ -66,5 +66,16 @@ public class BillDetails {
 
     public void setFoodSentiment(List<Integer> foodSentiment) {
         this.foodSentiment = foodSentiment;
+    }
+
+    @Override
+    public String toString() {
+        return "BillDetails{" +
+                "ID='" + ID + '\'' +
+                ", userID=" + userID +
+                ", billID='" + billID + '\'' +
+                ", foodItem=" + foodItem +
+                ", foodSentiment=" + foodSentiment +
+                '}';
     }
 }
